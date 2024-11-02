@@ -6,6 +6,7 @@ from typing import Any
 
 from real_intent.deliver.base import BaseOutputDeliverer
 from real_intent.schemas import MD5WithPII
+from real_intent.internal_logging import log
 
 from faker import Faker
 
@@ -151,13 +152,20 @@ class CSVStringFormatterRedacted(BaseOutputDeliverer):
 
     def _deliver(self, pii_md5s: list[MD5WithPII]) -> tuple[str, dict]:
         """
-        Convert the unique MD5s into a CSV string.
-        Returns empty string if no result.
+        Convert the unique MD5s into a CSV string with fake first and last names.
+            Returns:
+                tuple[str, dict]: A tuple containing:
+                    - CSV string of the processed data with fake names.
+                    - Dictionary of fake-to-real name mappings.
+                    Returns ("", {}) if pii_df is empty.
         """
+
+        log("info", "Starting delivery process with name replacement and PII removal.")
+
         pii_df: pd.DataFrame = self._as_dataframe(pii_md5s)
 
         if pii_df.empty:
-            return ""
+            return "", {}
         
         # Remove unnecessary PII
         pii_df = pii_df.drop(columns=[
@@ -191,6 +199,10 @@ class CSVStringFormatterRedacted(BaseOutputDeliverer):
             name_mapping[fake_first, fake_last] = row['first_name'], row['last_name']
             pii_df.at[index, 'first_name'] = fake_first
             pii_df.at[index, 'last_name'] = fake_last
+
+            log("info", f"Replaced real first,last name '{row['first_name']} {row['last_name']}' "
+                     f"with fake name '{fake_first} {fake_last}'.")
+
 
         # Convert to CSV string
         string_io = StringIO()

@@ -302,11 +302,14 @@ class ValidatedInsightsGenerator(BaseAnalyzer):
         ]
 
         total_str: str = "\n".join(processed_insights)
-
+        
+        log("trace", f"Initial insights string:\n{total_str}")
+        log("trace", f"Name mappings: {name_mappings}")
         # Replace fake names with real names if present in the insights
         for (fake_first, fake_last), (real_first, real_last) in name_mappings.items(): 
             total_str = total_str.replace(fake_first, real_first)
             total_str = total_str.replace(fake_last, real_last)
+        log("trace", f"Final insights string after replacements:\n{total_str}")
 
         if lead_insights.validation_insight:
             total_str = f"On validation: {lead_insights.validation_insight}\n\n{total_str}"

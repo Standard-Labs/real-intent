@@ -116,10 +116,13 @@ class PerLeadInsightGenerator(BaseAnalyzer):
             # Only one lead is provided, so assume the MD5 can be overriden
             lead_insight.md5 = pii_md5.md5
 
+            log("trace", f"Mappings: {name_mappings}")
             # Replace fake names with real names, loop shouldn't run more than once since there's only one lead
             for (fake_first, fake_last), (real_first, real_last) in name_mappings.items(): 
+                log("trace", f"Original(With Fake Names) insight: {lead_insight.insight}")
                 lead_insight.insight = lead_insight.insight.replace(fake_first, real_first)
                 lead_insight.insight = lead_insight.insight.replace(fake_last, real_last)
+                log("trace", f"Final(With Real Names) insight: {lead_insight.insight}")
 
             return lead_insight
         except (self._OpenAI_Error, ValidationError) as e:
