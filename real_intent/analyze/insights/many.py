@@ -13,6 +13,7 @@ from real_intent.process.base import BaseProcessor, ProcessValidator
 from real_intent.internal_logging import log
 from real_intent.utils import retry_with_backoff
 
+from real_intent.deliver.csv_redacted import CSVStringFormatterRedacted
 
 class LeadInsights(BaseModel):
     """Insights generated from lead data."""
@@ -250,7 +251,7 @@ class ValidatedInsightsGenerator(BaseAnalyzer):
         log("debug", f"Starting analysis for {len(pii_md5s)} MD5s")
         validation_info = self.extract_validation_info()
         
-        csv_data = CSVStringFormatter().deliver(pii_md5s)
+        csv_data, name_mappings = CSVStringFormatterRedacted().deliver(pii_md5s)     # changed from CSVStringFormatter to CSVStringFormatterRedacted               
         log("trace", f"CSV data prepared, length: {len(csv_data)}")
         
         @retry_with_backoff()
@@ -301,6 +302,11 @@ class ValidatedInsightsGenerator(BaseAnalyzer):
         ]
 
         total_str: str = "\n".join(processed_insights)
+
+        # Replace fake names with real names if present in the insights
+        for (fake_first, fake_last), (real_first, real_last) in name_mappings.items(): 
+            total_str = total_str.replace(fake_first, real_first)
+            total_str = total_str.replace(fake_last, real_last)
 
         if lead_insights.validation_insight:
             total_str = f"On validation: {lead_insights.validation_insight}\n\n{total_str}"

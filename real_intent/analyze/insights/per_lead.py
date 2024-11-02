@@ -8,6 +8,7 @@ from real_intent.analyze.base import BaseAnalyzer
 from real_intent.internal_logging import log
 from real_intent.utils import retry_with_backoff
 
+from real_intent.deliver.csv_redacted import CSVStringFormatterRedacted
 
 PROMPT = """You are an analyzer of lead data. You're given a list of insights pertaining to an entire set of leads. Your job is to keep the overall insights in mind and generate an insight for an individual lead that came from the full set.
 The point of the individual lead insight is to provide a simple, concise, and actionable insight that shows how the individual lead plays into themes or trends that were observed in the full set of insights.
@@ -78,7 +79,7 @@ class PerLeadInsightGenerator(BaseAnalyzer):
         Returns:
             A LeadInsight object containing the generated insight.
         """
-        lead_csv: str = CSVStringFormatter().deliver([pii_md5])
+        lead_csv, name_mappings = CSVStringFormatterRedacted().deliver([pii_md5]) # changed from CSVStringFormatter to CSVStringFormatterRedacted
 
         @retry_with_backoff()
         def generate_insight():
@@ -114,6 +115,11 @@ class PerLeadInsightGenerator(BaseAnalyzer):
 
             # Only one lead is provided, so assume the MD5 can be overriden
             lead_insight.md5 = pii_md5.md5
+
+            # Replace fake names with real names, loop shouldn't run more than once since there's only one lead
+            for (fake_first, fake_last), (real_first, real_last) in name_mappings.items(): 
+                lead_insight.insight = lead_insight.insight.replace(fake_first, real_first)
+                lead_insight.insight = lead_insight.insight.replace(fake_last, real_last)
 
             return lead_insight
         except (self._OpenAI_Error, ValidationError) as e:
