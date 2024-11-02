@@ -37,8 +37,6 @@ class CSVStringFormatterRedacted(CSVStringFormatter):
         # Remove unnecessary PII
         pii_df = pii_df.drop(columns=[
             'address',
-            'city',
-            'state',
             'zip_code',
             'email_1',
             'email_2',
@@ -46,6 +44,9 @@ class CSVStringFormatterRedacted(CSVStringFormatter):
             'phone_1',
             'phone_2',
             'phone_3',
+            'phone_1_dnc',
+            'phone_2_dnc',
+            'phone_3_dnc',
         ])
 
         name_mapping = {} 
@@ -54,7 +55,11 @@ class CSVStringFormatterRedacted(CSVStringFormatter):
         for index, row in pii_df.iterrows():
             # ensuring unique to avoid issues when mapping back to original names
             while True:
-                fake_first = self.fake.first_name()
+                if row['gender'].lower() in ["m", "male"]:
+                    fake_first = self.fake.first_name_male()
+                else:
+                    fake_first = self.fake.first_name_female()
+                
                 fake_last = self.fake.last_name()
 
                 if (fake_first, fake_last) not in fake_names:  

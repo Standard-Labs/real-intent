@@ -150,9 +150,15 @@ def test_individual_insights_generator(bigdbm_client) -> None:
     processor.add_validator(MNWValidator(), priority=2)
 
     generator = ValidatedInsightsGenerator(api_key, processor)
+
+    pii_1 = create_test_pii()
+    pii_1.gender = Gender.MALE
+    pii_2 = create_test_pii()
+    pii_2.gender = Gender.FEMALE
+    
     md5s = [
-        MD5WithPII(md5="123", sentences=["Interested in buying a new car"], pii=create_test_pii()),
-        MD5WithPII(md5="456", sentences=["Looking for auto insurance"], pii=create_test_pii())
+        MD5WithPII(md5="123", sentences=["Interested in buying a new car"], pii=pii_1), # temporary modification of test to test gendered names in insights
+        MD5WithPII(md5="456", sentences=["Looking for auto insurance"], pii=pii_2)
     ]
     result = generator.analyze(md5s)
 
