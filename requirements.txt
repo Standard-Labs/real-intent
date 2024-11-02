@@ -1,7 +1,7 @@
 pydantic>=2.8.2
 pandas
 requests
-logfire>=0.51.0
+logfire>=2.1.1
 openai==1.42.0
 Faker==30.8.2
 

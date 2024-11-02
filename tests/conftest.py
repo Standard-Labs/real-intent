@@ -21,7 +21,7 @@ if os.getenv("LOGFIRE_WRITE_TOKEN"):
     except ImportError:
         pass
     else:
-        logfire.configure(token=os.getenv("LOGFIRE_WRITE_TOKEN"))
+        logfire.configure(token=os.getenv("LOGFIRE_WRITE_TOKEN"), send_to_logfire=True)
 
 
 @pytest.fixture(scope="session")
