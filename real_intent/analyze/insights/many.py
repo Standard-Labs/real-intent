@@ -251,7 +251,7 @@ class ValidatedInsightsGenerator(BaseAnalyzer):
         log("debug", f"Starting analysis for {len(pii_md5s)} MD5s")
         validation_info = self.extract_validation_info()
         
-        csv_data, name_mappings = CSVStringFormatterRedacted().deliver(pii_md5s)     # changed from CSVStringFormatter to CSVStringFormatterRedacted               
+        csv_data, name_mappings = CSVStringFormatterRedacted().deliver(pii_md5s)           
         log("trace", f"CSV data prepared, length: {len(csv_data)}")
         
         @retry_with_backoff()

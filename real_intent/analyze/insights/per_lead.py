@@ -79,7 +79,7 @@ class PerLeadInsightGenerator(BaseAnalyzer):
         Returns:
             A LeadInsight object containing the generated insight.
         """
-        lead_csv, name_mappings = CSVStringFormatterRedacted().deliver([pii_md5]) # changed from CSVStringFormatter to CSVStringFormatterRedacted
+        lead_csv, name_mappings = CSVStringFormatterRedacted().deliver([pii_md5])
 
         @retry_with_backoff()
         def generate_insight():
