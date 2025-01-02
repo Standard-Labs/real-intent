@@ -435,3 +435,11 @@ class MD5WithPII(UniqueMD5):
             raise TypeError(f"Cannot compare MD5WithPII with {type(other)}.")
 
         return self.hash() == other.hash()
+    
+    def convert_dict_lead_export(self):
+        """Convert to dictionary for lead export."""
+        return {
+            "md5": self.md5,
+            "sentences": self.sentences,
+            "pii": self.pii.as_lead_export()
+        }
