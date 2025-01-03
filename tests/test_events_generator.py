@@ -1,4 +1,4 @@
-"""Test the events generator."""
+"""Test the UPDATED events generator."""
 import pytest
 import os
 import warnings
@@ -13,34 +13,39 @@ warnings.filterwarnings(
     category=DeprecationWarning
 )
 
-from real_intent.deliver.events import (
+from real_intent.deliver.events.main import (
     Event,
     EventsResponse,
     NoValidJSONError,
-    EventsGenerator
+    EventsGenerator,
 )
-
 
 # Load environment variables
 load_dotenv()
 
 
 @pytest.fixture
-def perplexity_api_key():
-    """Get Perplexity API key from environment."""
-    return os.getenv("PERPLEXITY_API_KEY")
+def scrapybara_api_key():
+    """Get Scrapybara API key from environment."""
+    return os.getenv("SCRAPYBARA_API_KEY")
 
 
 @pytest.fixture
-def events_generator_90210(perplexity_api_key):
+def anthropic_api_key():
+    """Get Anthropic API key from environment."""
+    return os.getenv("ANTHROPIC_API_KEY")
+
+
+@pytest.fixture
+def events_generator_90210(scrapybara_api_key, anthropic_api_key):
     """Create an EventsGenerator instance for Beverly Hills."""
-    return EventsGenerator("90210", perplexity_api_key)
+    return EventsGenerator("90210", scrapybara_api_key, anthropic_api_key)
 
 
 @pytest.fixture
-def events_generator_22101(perplexity_api_key):
+def events_generator_22101(scrapybara_api_key, anthropic_api_key):
     """Create an EventsGenerator instance for McLean."""
-    return EventsGenerator("22101", perplexity_api_key)
+    return EventsGenerator("22101", scrapybara_api_key, anthropic_api_key)
 
 
 def extract_date_from_range(date_str: str) -> str:
@@ -57,7 +62,7 @@ def extract_date_from_range(date_str: str) -> str:
     raise ValueError(f"Could not extract date from: {date_str}")
 
 
-@pytest.mark.skipif(not os.getenv("PERPLEXITY_API_KEY"), reason="Perplexity API key not found")
+@pytest.mark.skipif(not os.getenv("SCRAPYBARA_API_KEY") or not os.getenv("ANTHROPIC_API_KEY"), reason="Scrapybara or Anthropic API key not found")
 def test_beverly_hills_events(events_generator_90210):
     """Test generating events for Beverly Hills (90210)."""
     response = events_generator_90210.generate_events()
@@ -92,7 +97,7 @@ def test_beverly_hills_events(events_generator_90210):
     assert "Beverly Hills" in response.summary, "Summary should mention Beverly Hills"
 
 
-@pytest.mark.skipif(not os.getenv("PERPLEXITY_API_KEY"), reason="Perplexity API key not found")
+@pytest.mark.skipif(not os.getenv("SCRAPYBARA_API_KEY") or not os.getenv("ANTHROPIC_API_KEY"), reason="Scrapybara or Anthropic API key not found")
 def test_mclean_events(events_generator_22101):
     """Test generating events for McLean (22101)."""
     response = events_generator_22101.generate_events()
@@ -127,7 +132,7 @@ def test_mclean_events(events_generator_22101):
     assert "McLean" in response.summary, "Summary should mention McLean"
 
 
-@pytest.mark.skipif(not os.getenv("PERPLEXITY_API_KEY"), reason="Perplexity API key not found")
+@pytest.mark.skipif(not os.getenv("SCRAPYBARA_API_KEY") or not os.getenv("ANTHROPIC_API_KEY"), reason="Scrapybara or Anthropic API key not found")
 def test_pdf_generation(events_generator_90210):
     """Test generating PDF from events."""
     # First get some events
@@ -141,39 +146,40 @@ def test_pdf_generation(events_generator_90210):
     assert len(pdf_buffer.getvalue()) > 1000, "PDF should have meaningful content"
 
 
-@pytest.mark.skipif(not os.getenv("PERPLEXITY_API_KEY"), reason="Perplexity API key not found")
+@pytest.mark.skipif(not os.getenv("SCRAPYBARA_API_KEY") or not os.getenv("ANTHROPIC_API_KEY"), reason="Scrapybara or Anthropic API key not found")
 def test_invalid_zip_code():
     """Test initialization with invalid zip code."""
-    api_key = os.getenv("PERPLEXITY_API_KEY")
+    scrapybara_api_key = os.getenv("SCRAPYBARA_API_KEY")
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     
     # Test non-string zip code
     with pytest.raises(ValueError):
-        EventsGenerator(12345, api_key)
+        EventsGenerator(12345, scrapybara_api_key, anthropic_api_key)
     
     # Test empty zip code
     with pytest.raises(ValueError):
-        EventsGenerator("", api_key)
+        EventsGenerator("", scrapybara_api_key, anthropic_api_key)
     
     # Test wrong length zip code
     with pytest.raises(ValueError):
-        EventsGenerator("1234", api_key)
+        EventsGenerator("1234", scrapybara_api_key, anthropic_api_key)
     
     # Test non-numeric zip code
     with pytest.raises(ValueError):
-        EventsGenerator("abcde", api_key)
+        EventsGenerator("abcde", scrapybara_api_key, anthropic_api_key)
 
 
-@pytest.mark.skipif(not os.getenv("PERPLEXITY_API_KEY"), reason="Perplexity API key not found")
+@pytest.mark.skipif(not os.getenv("SCRAPYBARA_API_KEY") or not os.getenv("ANTHROPIC_API_KEY"), reason="Scrapybara or Anthropic API key not found")
 def test_invalid_api_key():
     """Test initialization with invalid API key."""
     # Test non-string API key
     with pytest.raises(ValueError):
-        EventsGenerator("90210", 12345)
+        EventsGenerator("90210", 12345, 54321)
     
     # Test empty API key
     with pytest.raises(ValueError):
-        EventsGenerator("90210", "")
+        EventsGenerator("90210", "", "")
     
     # Test None API key
     with pytest.raises(ValueError):
-        EventsGenerator("90210", None)
+        EventsGenerator("90210", None, None)
