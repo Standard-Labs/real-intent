@@ -15,27 +15,12 @@ from playwright.sync_api import sync_playwright, Error as PlaywrightError
 from real_intent.events.scrapy_claude.claude_sync import SearchTool
 from real_intent.events.models import Event, EventsResponse
 from real_intent.events.base import BaseEventsGenerator
-from real_intent.events.errors import NoValidJSONError, NoEventsFoundError
-from real_intent.events.utils import extract_json_only, retry_generation, ToolError, CLIResult
+from real_intent.events.errors import NoEventsFoundError
+from real_intent.events.utils import extract_json_only, retry_generation, ToolError, CLIResult, extract_json_array
 from real_intent.internal_logging import log
 
 
 # ---- Helpers ----
-
-def extract_json_array(response: str):
-    """
-    Parse a string response and pull out everything between the first [ and last ]
-    then return it as a list. Allows excess text before and after valid JSON array
-    without causing an error.
-    """
-    start_index = response.find("[")
-    end_index = response.rfind("]")
-
-    if start_index == -1 or end_index == -1:
-        raise NoValidJSONError("Array not found in response")
-
-    return json.loads(response[start_index:end_index + 1])
-
 
 def log_step(step: Step) -> None:
     """Log the details of a step in the event generation process."""

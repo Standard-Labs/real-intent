@@ -61,6 +61,21 @@ def extract_json_only(response_str: str) -> dict[str, Any]:
     return json.loads(response_str[start_index:end_index+1])
 
 
+def extract_json_array(response: str):
+    """
+    Parse a string response and pull out everything between the first [ and last ]
+    then return it as a list. Allows excess text before and after valid JSON array
+    without causing an error.
+    """
+    start_index = response.find("[")
+    end_index = response.rfind("]")
+
+    if start_index == -1 or end_index == -1:
+        raise NoValidJSONError("Array not found in response")
+
+    return json.loads(response[start_index:end_index + 1])
+
+
 def retry_generation(func: Callable):
     """Retry the generation once if it fails validation."""
     MAX_ATTEMPTS: int = 2
@@ -156,7 +171,8 @@ def generate_pdf_buffer(events_response: EventsResponse) -> BytesIO:
 
         c.setFont("Helvetica-Oblique", 10)
         c.setFillColor(colors.blue)
-        c.drawString(100, y_position, f"Link: {event.link if event.link else 'N/A'}")
+        c.drawString(100, y_position, f"Link: {event.link[:70] + '...' if event.link and len(event.link) > 70 else event.link if event.link else 'N/A'}")
+        c.linkURL(event.link, (100, y_position, width - 100, y_position + 10)) if event.link else None
         y_position -= 20
 
         c.setFillColor(colors.black) 
