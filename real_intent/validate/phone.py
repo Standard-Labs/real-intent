@@ -42,10 +42,21 @@ class PhoneValidator(BaseValidator):
         response.raise_for_status()
         response_json = response.json()
 
+        # Handle errors
+        if not response_json["success"]:
+            if "error" in response_json and response_json["error"]["code"] == 313:
+                log("warn", f"Numverify hit a (handled) snag and is marking this number invalid. {response_json}")
+                return False
+
+            log("error", f"Failed to validate phone number {phone} with numverify: {response_json}")
+            raise ValueError(f"Failed to validate phone number {phone} with numverify: {response_json}")
+
+        # Handle unexpected responses
         if "valid" not in response_json:
             log("error", f"Unexpected response from numverify: {response_json}")
             raise ValueError(f"Unexpected response from numverify: {response_json}")
 
+        # Handle valid responses
         return response_json["valid"]
     
     def _validate_with_retry(self, phone: str) -> bool:
